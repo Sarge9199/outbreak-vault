@@ -1,0 +1,39 @@
+# Builds the container on every push to main and publishes it to GitHub's registry:
+#   ghcr.io/sarge9199/outbreak-vault:latest   (plus a :sha-<commit> tag for rollbacks)
+# Uses the built-in GITHUB_TOKEN, so no extra secrets or passwords are needed.
+name: Publish container
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/sarge9199/outbreak-vault:latest
+            ghcr.io/sarge9199/outbreak-vault:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

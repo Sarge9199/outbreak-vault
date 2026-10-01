@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Outbreak Vault</title>
+<!-- Favicon: "Biohazard vault" (concept A), #FFA500 to match Greg's Unraid accent. Standalone copy: outbreak_vault_icon.svg -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3Cmask id='bio' maskUnits='userSpaceOnUse' x='0' y='0' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23000'/%3E%3Ccircle cx='32' cy='25' r='8' fill='%23fff'/%3E%3Ccircle cx='38.06' cy='35.5' r='8' fill='%23fff'/%3E%3Ccircle cx='25.94' cy='35.5' r='8' fill='%23fff'/%3E%3Ccircle cx='32' cy='22' r='5.5' fill='%23000'/%3E%3Ccircle cx='40.66' cy='37' r='5.5' fill='%23000'/%3E%3Ccircle cx='23.34' cy='37' r='5.5' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='3' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E%3Crect x='1' y='1' width='62' height='62' rx='12' fill='%230c1012' stroke='%23FFA500' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='25' fill='none' stroke='%23FFA500' stroke-width='3.5'/%3E%3Ccircle cx='32' cy='32' r='20' fill='%23151d21' stroke='%23FFA500' stroke-width='1'/%3E%3Crect x='30' y='3.5' width='4' height='5' fill='%23FFA500'/%3E%3Crect x='30' y='55.5' width='4' height='5' fill='%23FFA500'/%3E%3Crect x='3.5' y='30' width='5' height='4' fill='%23FFA500'/%3E%3Crect x='55.5' y='30' width='5' height='4' fill='%23FFA500'/%3E%3Crect width='64' height='64' fill='%237ed452' mask='url(%23bio)'/%3E%3Ccircle cx='32' cy='32' r='5.2' fill='none' stroke='%237ed452' stroke-width='1.6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#07090a; --bg1:#0c1012; --card:#10161a; --card2:#151d21; --line:#2b3a3f;
+  --ink:#dce7ea; --muted:#8fa2a8; --faint:#5a6c72;
+  --gold:#FFA500; --gold-bright:#FFB733; --gold-dim:#CC8400;
+  --green:#7ed452; --green-bright:#aef07f; --green-bg:rgba(126,212,82,.14);
+  --amber:#ff7a45; --amber-bg:rgba(255,122,69,.16);
+  --grey-bg:rgba(132,151,157,.13);
+  --danger:#ff5a5a; --danger-bg:rgba(255,90,90,.15);
+  --shadow:0 10px 26px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.5);
+  --serif:'Oswald',Impact,'Arial Narrow',sans-serif;
+  --mono:'Share Tech Mono','Consolas',monospace;
+  --sans:'Inter',-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh; color:var(--ink); font:16px/1.55 var(--sans);
+  background:
+    repeating-linear-gradient(180deg, rgba(255,255,255,.018) 0px, rgba(255,255,255,.018) 1px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(90deg, rgba(126,212,82,.025) 0px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(0deg, rgba(126,212,82,.025) 0px, transparent 1px, transparent 64px),
+    radial-gradient(ellipse 1000px 560px at 15% -10%, rgba(255,165,0,.08), transparent 60%),
+    radial-gradient(ellipse 800px 520px at 100% 8%, rgba(126,212,82,.06), transparent 55%),
+    linear-gradient(180deg, var(--bg1) 0%, var(--bg0) 70%);
+  background-attachment:fixed;
+}
+::selection{background:var(--gold-dim);color:#0a0a0a}
+a{color:inherit}
+[hidden]{display:none!important}
+button,input{font-family:inherit}
+
+/* ---------- login screen ---------- */
+#loginScreen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px}
+.login-card{width:100%; max-width:420px; background:linear-gradient(160deg,var(--card2),var(--card)); border:1px solid var(--line); border-top:2px solid var(--gold-dim); border-radius:10px; padding:32px 30px; box-shadow:var(--shadow)}
+.login-crest{display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:6px; position:relative}
+.login-crest::before{content:'';position:absolute; width:52px; height:52px; border:1px dashed var(--gold-dim); border-radius:50%; opacity:.45}
+.login-crest svg{width:27px;height:27px; color:var(--gold); filter:drop-shadow(0 0 8px rgba(255,165,0,.5))}
+.login-card h1{margin:0; text-align:center; font:700 27px var(--serif); letter-spacing:1.5px; text-transform:uppercase; color:var(--gold-bright)}
+.srv-pick{display:flex; flex-direction:column; gap:6px}
+.field .srv-opt{display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; cursor:pointer; background:rgba(0,0,0,.2); text-transform:none; letter-spacing:normal; margin:0; font:inherit; color:inherit}
+.field .srv-opt:hover{border-color:var(--gold-dim)}
+.field .srv-opt:has(input:checked){border-color:var(--gold); background:rgba(255,165,0,.08)}
+.field .srv-opt input{accent-color:var(--gold); margin:0; width:auto; padding:0; box-shadow:none; flex:none}
+.srv-opt span{display:flex; flex-direction:column; line-height:1.25}
+.srv-opt b{font:600 14px var(--sans); color:var(--ink)}
+.srv-opt small{font:12px var(--mono); color:var(--muted)}
+.srv-loading{font:13px var(--mono); color:var(--muted); padding:8px 2px}
+/* ☰ menu (top-left of the dashboard header): signed-in user, server in use, sign out. */
+.menu-btn{position:absolute; top:14px; left:14px; z-index:6; width:42px; height:38px; display:flex; flex-direction:column; justify-content:center; gap:5px; padding:0 10px; background:rgba(0,0,0,.35); border:1px solid var(--line); border-radius:6px; cursor:pointer; transition:border-color .15s}
+.menu-btn span{display:block; height:2px; background:var(--gold); border-radius:1px}
+.menu-btn:hover,.menu-btn[aria-expanded="true"]{border-color:var(--gold-dim)}
+.nav-menu{position:absolute; top:60px; left:14px; z-index:7; min-width:230px; max-width:calc(100% - 28px); text-align:left; background:linear-gradient(160deg,var(--card2),var(--card)); border:1px solid var(--line); border-top:2px solid var(--gold-dim); border-radius:8px; padding:14px 16px; box-shadow:var(--shadow); font-family:var(--mono)}
+.nm-row{display:flex; flex-direction:column; margin-bottom:12px}
+.nm-k{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted)}
+.nm-v{font-size:15px; color:var(--green-bright); margin-top:3px; overflow-wrap:anywhere}
+.nm-out{width:100%; margin-top:2px}
+/* Phones: push the title block down so the ☰ button gets its own row above the header icons. */
+@media(max-width:560px){
+  #dashboard header{padding-top:62px}
+  #dashboard .menu-btn{top:10px; left:10px}
+  #dashboard .nav-menu{top:54px; left:10px}
+}
+.login-sub{text-align:center; color:var(--muted); font:13px var(--mono); margin-top:8px; letter-spacing:.03em}
+.field{margin-top:18px}
+.field label{display:block; font:12px var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px}
+.field input{width:100%; padding:12px 14px; border-radius:6px; border:1px solid var(--line); background:rgba(0,0,0,.3); color:var(--ink); font-size:15px; outline:none}
+.field input:focus{border-color:var(--gold-dim); box-shadow:0 0 0 3px rgba(255,165,0,.13)}
+.login-err{color:var(--danger); font:13px var(--mono); margin-top:14px; min-height:14px; line-height:1.5}
+.btn{padding:12px 19px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--muted); font:600 13px/1 var(--mono); text-transform:uppercase; letter-spacing:.06em; cursor:pointer; transition:.15s}
+.btn:hover{border-color:var(--gold-dim); color:var(--gold-bright)}
+.btn:disabled{opacity:.5; cursor:wait}
+.btn.primary{width:100%; margin-top:22px; background:var(--gold-dim); border-color:var(--gold-dim); color:#0a0a0a; padding:13px}
+.btn.primary:hover{background:var(--gold); color:#0a0a0a}
+
+/* ---------- dashboard shell ---------- */
+header{padding:34px 24px 20px; text-align:center; position:relative}
+header::after{content:'';position:absolute; left:50%; bottom:0; transform:translateX(-50%); width:min(600px,80%); height:1px;
+  background:linear-gradient(90deg, transparent, var(--gold-dim), transparent); opacity:.6}
+.crest{display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:6px}
+.crest .hdr-icon{width:54px; height:54px; flex:none; filter:drop-shadow(0 0 10px rgba(255,165,0,.35))}
+h1{margin:0; font:700 clamp(24px,4vw,36px)/1.05 var(--serif); color:var(--gold-bright); letter-spacing:1.5px; text-transform:uppercase}
+.stats{color:var(--green-bright); font-size:14px; margin-top:12px; letter-spacing:.05em; font-family:var(--mono); opacity:.9; min-height:18px}
+.upnext .un-item{margin-bottom:6px}
+.un-prog{display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:13px; color:var(--gold); margin:6px 0 2px}
+.un-bar{flex:0 0 180px; height:6px; background:rgba(255,165,0,.15); border-radius:3px; overflow:hidden}
+.un-bar i{display:block; height:100%; background:var(--gold)}
+.un-runway{font-family:var(--mono); font-size:12px; color:var(--green-bright); margin:4px 0 2px; letter-spacing:.03em}
+.un-more{font-size:13px; opacity:.85; margin:4px 0 2px}
+.un-loading,.un-empty{font-family:var(--mono); font-size:13px; opacity:.7; padding:10px 0}
+.un-row{display:flex; gap:12px; overflow-x:auto; padding:4px 2px 12px; scroll-snap-type:x mandatory; scrollbar-width:thin; scrollbar-color:var(--gold-dim) transparent}
+.un-card{flex:0 0 auto; scroll-snap-align:start; background:var(--grey-bg); border:1px solid rgba(255,165,0,.18); border-radius:10px; padding:10px; cursor:pointer; transition:border-color .15s}
+.un-card:hover{border-color:var(--gold-dim)}
+.un-card.sel{border-color:var(--gold)}
+.un-now{width:330px; display:flex; gap:12px}
+.un-now .un-cov{width:104px; height:104px; flex:0 0 104px}
+.un-tall{width:150px}
+.un-tall .un-cov{width:130px; height:130px}
+.un-small{width:160px}
+.un-small .un-cov{width:140px; height:105px}
+.un-cov{display:block; object-fit:cover; border-radius:6px; background:rgba(0,0,0,.35)}
+.un-cov.ph{display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:32px; color:var(--gold-dim)}
+.un-t{font-family:var(--sans); font-size:14px; font-weight:600; color:var(--ink); margin-top:6px; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.un-now .un-t{margin-top:0}
+.un-s{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:3px}
+.un-card .un-bar{flex:none; width:100%; margin:7px 0 4px}
+.un-card .un-runway{font-size:11px; margin:3px 0 0}
+.un-go{display:inline-block; margin-top:8px; font-family:var(--mono); font-size:12px; color:#111; background:var(--gold); border:1px solid var(--gold); border-radius:5px; padding:4px 10px; text-decoration:none}
+.un-go:hover{background:var(--gold-bright)}
+.un-go.alt{background:none; color:var(--gold); border-color:var(--gold-dim)}
+.un-go.alt:hover{color:#111; background:var(--gold)}
+.un-chips{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px}
+.un-chips button{font-size:11px}
+.un-chips > *{max-width:100%; min-width:0; box-sizing:border-box; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.un-card{min-width:0; overflow:hidden}
+.un-detail:empty{display:none}
+.un-detail{margin:0 0 12px}
+.toolbar{max-width:960px; margin:20px auto 0; padding:0 24px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center}
+.search-wrap{position:relative; flex:1 1 320px; min-width:220px; max-width:480px}
+.search-wrap svg{position:absolute; left:14px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--faint)}
+input[type=search]{width:100%; padding:12px 14px 12px 38px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink); font:15px var(--mono); outline:none}
+input[type=search]:focus{border-color:var(--gold-dim); box-shadow:0 0 0 3px rgba(255,165,0,.13)}
+.session-pill{position:absolute; top:18px; right:20px; z-index:5; font-size:12px; font-family:var(--mono); color:var(--muted); padding:8px 13px; border-radius:6px; border:1px solid var(--green); background:var(--green-bg); color:var(--green-bright); text-transform:uppercase; letter-spacing:.03em; white-space:nowrap}
+
+main{max-width:960px; margin:0 auto; padding:26px 24px 90px; min-height:200px}
+.empty-note{text-align:center; color:var(--faint); font:14px var(--mono); margin-top:60px; letter-spacing:.03em}
+h2.section{font:600 14px var(--mono); text-transform:uppercase; letter-spacing:.2em; color:var(--gold-dim);
+  margin:34px 0 14px; padding-bottom:10px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:9px}
+h2.section::before{content:'//'; color:var(--faint)}
+h2.section svg{width:12px;height:12px; opacity:.75; flex:none}
+.search-err{color:var(--danger); font:14px var(--mono); text-align:center; margin-top:40px; line-height:1.6}
+
+/* ---------- series card ---------- */
+.series{background:linear-gradient(160deg, var(--card2), var(--card)); border:1px solid var(--line); border-left:3px solid var(--gold-dim);
+  border-radius:9px; margin:16px 0; box-shadow:var(--shadow); overflow:hidden; position:relative; transition:border-color .2s}
+.series::before, .series::after{content:''; position:absolute; width:12px; height:12px; pointer-events:none; opacity:0; transition:opacity .2s}
+.series::before{top:-1px; left:-1px; border-top:2px solid var(--gold); border-left:2px solid var(--gold)}
+.series::after{bottom:-1px; right:-1px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold)}
+.series.open{border-left-color:var(--gold)}
+.series.open::before, .series.open::after{opacity:.8}
+.s-head{display:flex; gap:18px; align-items:center; padding:18px 20px; cursor:pointer; user-select:none}
+.s-cover{width:168px; height:168px; border-radius:7px; object-fit:cover; box-shadow:0 6px 16px rgba(0,0,0,.6); flex:none; background:var(--line)}
+.s-cover.ph{display:flex; align-items:center; justify-content:center; font:700 53px var(--serif); color:var(--faint)}
+.s-body{flex:1; min-width:0}
+.s-title{font:600 21px/1.25 var(--serif); text-transform:uppercase; letter-spacing:.4px; color:var(--gold-bright); display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.s-author{margin-top:5px; font-size:13.5px; font-family:var(--mono); color:var(--muted)}
+.s-meta{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.chip{font:12px var(--mono); text-transform:uppercase; letter-spacing:.03em; padding:3px 10px; border-radius:4px; background:var(--grey-bg); color:var(--muted); display:inline-flex; align-items:center; gap:4px; white-space:nowrap; border:1px solid rgba(255,255,255,.04)}
+.chip svg{width:11px;height:11px}
+.chip.status-complete{background:var(--green-bg); color:var(--green-bright); border-color:rgba(126,212,82,.3); font-weight:700}
+.chip.status-missing{background:var(--danger-bg); color:var(--danger); border-color:rgba(255,90,90,.3); font-weight:700}
+.chip.status-unreviewed{background:var(--grey-bg); color:var(--faint)}
+.s-caret{flex:none; width:30px; height:30px; border-radius:5px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--gold-dim); transition:transform .2s, background .2s, border-color .2s}
+.series.open .s-caret{transform:rotate(90deg); background:rgba(255,165,0,.12); border-color:var(--gold-dim); color:var(--gold-bright)}
+.s-caret svg{width:16px;height:16px}
+.s-panel{max-height:0; overflow:hidden; transition:max-height .3s ease}
+.series.open .s-panel{max-height:none}
+.s-inner{padding:0 20px 20px}
+.s-blurb{color:var(--muted); font-size:14px; line-height:1.65; padding:13px 15px; margin-bottom:16px; background:rgba(0,0,0,.25); border-left:2px solid var(--green); border-radius:0 6px 6px 0}
+.sub-heading{font:600 12px var(--mono); text-transform:uppercase; letter-spacing:.15em; color:var(--faint); margin:16px 0 8px; padding-left:2px}
+
+/* ---------- book row ---------- */
+.book{display:flex; gap:16px; align-items:flex-start; padding:14px 15px; border-radius:8px; margin:8px 0; background:rgba(0,0,0,.2); border:1px solid transparent}
+.book:hover{background:rgba(0,0,0,.32); border-color:var(--line)}
+.b-cover{width:123px; height:123px; border-radius:6px; object-fit:cover; flex:none; background:var(--line)}
+.b-cover.ph{display:flex; align-items:center; justify-content:center; font:700 36px var(--serif); color:var(--faint)}
+.b-body{flex:1; min-width:0}
+.b-title{font-weight:600; font-size:16.5px; color:var(--ink); overflow-wrap:anywhere}
+.b-title .seq{color:var(--gold); font-weight:700; font-family:var(--mono); margin-right:4px}
+.b-sub{margin-top:5px; font-size:13.5px; font-family:var(--mono); color:var(--muted); display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+.narr{display:inline-flex; align-items:center; gap:4px}
+.narr svg{width:12px;height:12px}
+.narr.fav{color:var(--amber); font-weight:700}
+.b-series-sub{margin-top:5px; font-size:12.5px; font-family:var(--mono); color:var(--faint)}
+.link-btn{background:none; border:none; padding:0; font:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:2px}
+.author-link{color:var(--green-bright)}
+.author-link:hover{color:var(--green)}
+.narrator-link{color:var(--muted)}
+.narrator-link:hover{color:var(--ink)}
+.narrator-link.fav{color:var(--amber); font-weight:700}
+.narrator-link.fav:hover{color:var(--gold-bright)}
+.series-link{color:var(--gold-bright); font-weight:600}
+.series-link:hover{color:var(--gold)}
+.b-row2{margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.pill{font:12px var(--mono); text-transform:uppercase; letter-spacing:.04em; font-weight:700; padding:4px 11px; border-radius:4px; display:inline-flex; align-items:center; gap:5px; border:1px solid rgba(255,255,255,.05)}
+.pill svg{width:11px;height:11px}
+.pill.unread{background:var(--grey-bg); color:var(--muted)}
+.pill.progress{background:var(--amber-bg); color:var(--amber); border-color:rgba(255,122,69,.3)}
+.pill.finished{background:var(--green-bg); color:var(--green-bright); border-color:rgba(126,212,82,.3)}
+.mini-btn{font:700 12px var(--mono); text-transform:uppercase; letter-spacing:.04em; padding:5px 12px; border-radius:4px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; transition:.15s}
+.mini-btn:hover{border-color:var(--gold-dim); color:var(--gold-bright); background:rgba(255,165,0,.08)}
+.mini-btn.abs-link{text-decoration:none; display:inline-block; color:var(--gold); border-color:var(--gold-dim)}
+.mini-btn.abs-link:hover{color:#111; background:var(--gold); border-color:var(--gold)}
+.mini-btn:disabled{opacity:.5; cursor:wait}
+.more-link{font:12px var(--mono); text-transform:uppercase; letter-spacing:.03em; color:var(--gold-dim); cursor:pointer; text-decoration:underline; text-underline-offset:2px; background:none; border:none; padding:0}
+.more-link:hover{color:var(--gold-bright)}
+.desc{max-height:0; overflow:hidden; transition:max-height .25s ease}
+.desc.open{max-height:600px}
+.desc-txt{font-size:13.5px; line-height:1.65; color:var(--muted); padding-top:10px; border-top:1px dashed var(--line); margin-top:10px}
+.err-note{font-size:12.5px; font-family:var(--mono); color:var(--danger); margin-top:6px}
+.book-plain{background:var(--card); border:1px solid var(--line)}
+
+/* ---------- identity cards (authors/narrators) ---------- */
+.identity{background:linear-gradient(160deg, var(--card2), var(--card)); border:1px solid var(--line); border-left:3px solid var(--green); border-radius:9px; margin:16px 0; padding:18px 20px}
+.identity-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.identity-name{font:600 20px var(--serif); text-transform:uppercase; letter-spacing:.3px; color:var(--green-bright)}
+.identity-count{font:12px var(--mono); color:var(--faint); text-transform:uppercase; letter-spacing:.04em}
+.mode-toggle{display:flex; gap:8px; margin-top:12px}
+.mode-btn{font:700 11.5px var(--mono); text-transform:uppercase; letter-spacing:.05em; padding:6px 14px; border-radius:20px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; transition:.15s}
+.mode-btn:hover{border-color:var(--gold-dim); color:var(--gold-bright)}
+.mode-btn.active{background:var(--gold-dim); border-color:var(--gold-dim); color:#0a0a0a}
+.identity-books{margin-top:14px}
+.identity-loading{color:var(--faint); font:13px var(--mono); padding:10px 2px; letter-spacing:.03em}
+
+/* ---------- genre filter bar (header) + genre chips on books ---------- */
+.genre-bar{max-width:960px; margin:14px auto 0; padding:0 24px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center}
+.g-chip{font:12px var(--mono); letter-spacing:.02em; padding:5px 11px; border-radius:20px; border:1px solid var(--line); background:rgba(0,0,0,.25); color:var(--muted); cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:.15s; white-space:nowrap}
+.g-chip:hover{border-color:var(--green); color:var(--green-bright)}
+.g-chip.on{background:var(--green-bg); border-color:var(--green); color:var(--green-bright); font-weight:700}
+.g-chip .pin{border:none; background:none; padding:0; font:inherit; color:var(--faint); cursor:pointer; line-height:1}
+.g-chip .pin.pinned{color:var(--gold)}
+.g-chip .pin:hover{color:var(--gold-bright)}
+.g-add{font:12px var(--mono); padding:5px 12px; border-radius:20px; border:1px dashed var(--line); background:transparent; color:var(--ink); width:170px; outline:none}
+.g-add:focus{border-color:var(--gold-dim); border-style:solid}
+.g-toggle{font:700 11.5px var(--mono); text-transform:uppercase; letter-spacing:.05em; padding:6px 12px; border-radius:20px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer}
+.g-toggle.on{background:var(--gold-dim); border-color:var(--gold-dim); color:#0a0a0a}
+.g-clear{font:12px var(--mono); color:var(--gold-dim); background:none; border:none; cursor:pointer; text-decoration:underline; text-underline-offset:2px; padding:0 4px}
+.g-clear:hover{color:var(--gold-bright)}
+.filter-banner{font:13px var(--mono); color:var(--green-bright); background:var(--green-bg); border:1px solid rgba(126,212,82,.3); border-radius:6px; padding:9px 13px; margin:6px 0 4px; letter-spacing:.02em}
+.b-genres{margin-top:8px; display:flex; gap:6px; flex-wrap:wrap}
+.b-genres .g-chip{font-size:11px; padding:2px 9px}
+
+/* ---------- spinner overlay (k-bar) ---------- */
+.overlay{position:fixed; inset:0; background:rgba(3,4,4,.86); backdrop-filter:blur(2px); display:none; align-items:center; justify-content:center; z-index:60; flex-direction:column; gap:18px}
+.overlay.show{display:flex}
+.kbar-wrap{position:relative; width:120px; height:120px}
+.kbar-glow{position:absolute; inset:-30px; border-radius:50%; background:radial-gradient(circle, rgba(255,90,60,.35), transparent 70%); animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5; transform:scale(.9)} 50%{opacity:1; transform:scale(1.1)}}
+.kbar-spin{width:120px; height:120px; animation:spin 1.1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay-text{font:13px var(--mono); color:var(--amber); text-transform:uppercase; letter-spacing:.15em}
+.overlay-text::after{content:''; display:inline-block; width:6px; height:13px; background:var(--amber); margin-left:6px; animation:blink 1s steps(2) infinite; vertical-align:middle}
+@keyframes blink{50%{opacity:0}}
+
+@media(max-width:560px){
+  .crest{gap:10px}
+  .crest .hdr-icon{width:36px; height:36px}
+  .s-head{gap:13px; padding:15px 16px}
+  .s-cover{width:118px;height:118px}
+  .b-cover{width:90px;height:90px}
+  .s-title{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <div class="login-crest">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="10" width="18" height="11" rx="1.5"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+    </div>
+    <h1>The Outbreak Vault</h1>
+    <div class="login-sub">Authenticate to access the archive</div>
+    <div class="field">
+      <label>Server</label>
+      <div class="srv-pick" id="srvPick"><div class="srv-loading">Loading servers&hellip;</div></div>
+      <input type="hidden" id="absBase" value="">
+    </div>
+    <div class="field">
+      <label for="loginUser">Username</label>
+      <input type="text" id="loginUser" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label for="loginPass">Password</label>
+      <input type="password" id="loginPass" autocomplete="current-password" required>
+    </div>
+    <div class="login-err" id="loginErr"></div>
+    <button type="submit" class="btn primary" id="loginSubmit">Enter the Vault</button>
+  </form>
+</div>
+
+<div id="dashboard" hidden>
+  <header>
+    <button type="button" class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="navMenu"><span></span><span></span><span></span></button>
+    <div class="nav-menu" id="navMenu" hidden>
+      <div class="nm-row"><span class="nm-k">Signed in as</span><span class="nm-v" id="sessionPill"></span></div>
+      <div class="nm-row"><span class="nm-k">Server</span><span class="nm-v" id="nmServer"></span></div>
+      <button type="button" class="btn nm-out" id="signOutBtn">Sign out</button>
+    </div>
+    <div class="crest">
+      <!-- Icon B: reticle listener -->
+      <svg class="hdr-icon" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="1" y="1" width="62" height="62" rx="12" fill="#0c1012" stroke="#FFA500" stroke-width="2"/>
+        <path d="M13 38 A19 19 0 0 1 51 38" fill="none" stroke="#FFA500" stroke-width="4.5" stroke-linecap="round"/>
+        <rect x="8" y="33" width="11" height="18" rx="3" fill="#FFA500"/>
+        <rect x="45" y="33" width="11" height="18" rx="3" fill="#FFA500"/>
+        <circle cx="32" cy="41" r="9" fill="none" stroke="#7ed452" stroke-width="2.5"/>
+        <path d="M22 41h5M37 41h5M32 31v5M32 46v5" stroke="#7ed452" stroke-width="2.5"/>
+        <circle cx="32" cy="41" r="2.2" fill="#ff5a5a"/>
+      </svg>
+      <h1>The Outbreak Vault</h1>
+      <!-- Icon C: infected gas mask -->
+      <svg class="hdr-icon" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="1" y="1" width="62" height="62" rx="12" fill="#0c1012" stroke="#FFA500" stroke-width="2"/>
+        <path d="M12 26l6 2M52 26l-6 2" stroke="#CC8400" stroke-width="3"/>
+        <path d="M20 16 Q32 10 44 16 Q51 30 45 43 Q39 51 32 51 Q25 51 19 43 Q13 30 20 16 Z" fill="#2b3a3f" stroke="#FFA500" stroke-width="2.5"/>
+        <circle cx="25" cy="28" r="6.5" fill="#0c1012" stroke="#FFA500" stroke-width="2.2"/>
+        <circle cx="39" cy="28" r="6.5" fill="#0c1012" stroke="#FFA500" stroke-width="2.2"/>
+        <circle cx="25" cy="28" r="3.6" fill="#7ed452"/><circle cx="39" cy="28" r="3.6" fill="#7ed452"/>
+        <rect x="25.5" y="41" width="13" height="15" rx="2.5" fill="#FFA500" stroke="#0c1012" stroke-width="1"/>
+        <path d="M28 45h8M28 48.5h8M28 52h8" stroke="#0c1012" stroke-width="1.6"/>
+      </svg>
+    </div>
+    <div class="stats" id="stats">Loading vault contents&hellip;</div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="q" placeholder="Search a title, series, author, or narrator&hellip;">
+      </div>
+      <button class="btn" id="searchBtn">Search</button>
+      <button class="btn" id="clearBtn">Clear</button>
+    </div>
+    <div class="genre-bar" id="genreBar" aria-label="Filter by genre"></div>
+    <datalist id="genreList"></datalist>
+  </header>
+  <main id="main">
+    <div class="empty-note" id="emptyNote">The vault is sealed until you search. Type a title, series, author, or narrator above, or pick a genre to browse.</div>
+    <div id="results"></div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="kbar-wrap">
+    <div class="kbar-glow"></div>
+    <svg class="kbar-spin" viewBox="0 0 120 120">
+      <defs>
+        <linearGradient id="steelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#e8ecef"/><stop offset="35%" stop-color="#9aa4ab"/>
+          <stop offset="50%" stop-color="#f4f7f8"/><stop offset="65%" stop-color="#7c868c"/>
+          <stop offset="100%" stop-color="#c3c9cd"/>
+        </linearGradient>
+        <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#3a2c22"/><stop offset="100%" stop-color="#1a130e"/>
+        </linearGradient>
+        <linearGradient id="bloodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#7a0e0e" stop-opacity="0"/>
+          <stop offset="55%" stop-color="#8f1414" stop-opacity=".85"/>
+          <stop offset="100%" stop-color="#4a0808" stop-opacity=".95"/>
+        </linearGradient>
+      </defs>
+      <g transform="translate(60,60)">
+        <path d="M -6,-46 L 6,-46 L 9,-8 L -9,-8 Z" fill="url(#steelGrad)" stroke="#5b6267" stroke-width="0.6"/>
+        <path d="M -7,-30 Q -3,-22 -6,-10 L -2,-9 Q 1,-24 2,-32 Z" fill="url(#bloodGrad)"/>
+        <path d="M 3,-38 Q 6,-30 5,-14 L 7,-13 Q 8,-30 6,-40 Z" fill="url(#bloodGrad)"/>
+        <rect x="-13" y="-10" width="26" height="5" rx="1.5" fill="#c9974c" stroke="#5b3f1a" stroke-width="0.5"/>
+        <rect x="-6.5" y="-5" width="13" height="28" rx="3" fill="url(#handleGrad)" stroke="#0a0705" stroke-width="0.6"/>
+        <line x1="-4" y1="2" x2="4" y2="2" stroke="#000" stroke-opacity=".4" stroke-width="1"/>
+        <line x1="-4" y1="8" x2="4" y2="8" stroke="#000" stroke-opacity=".4" stroke-width="1"/>
+        <line x1="-4" y1="14" x2="4" y2="14" stroke="#000" stroke-opacity=".4" stroke-width="1"/>
+        <circle cx="0" cy="21" r="3" fill="#c9974c" stroke="#5b3f1a" stroke-width="0.5"/>
+      </g>
+    </svg>
+  </div>
+  <div class="overlay-text" id="overlayText">Accessing vault data</div>
+</div>
+
+<script>
+const FAV_NARRATORS = ['r.c. bray','luke daniels','kevin pierce','matt weight','greg tremblay','stacey glemboski'];
+let session = null;
+let progressMap = {};
+let identitySeq = 0;
+const identityData = {}; // id -> { kind, key, items: [] | null }
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const strip = s => String(s || '').replace(/^(the|a|an)\s+/i, '');
+const nat = (a,b) => String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'});
+const fmtH = s => { if (!s) return '0h'; const h = s/3600; return (h < 10 ? h.toFixed(1) : Math.round(h)) + 'h'; };
+const b64u = s => btoa(unescape(encodeURIComponent(s)));
+const authHeaders = () => ({ headers: { Authorization: `Bearer ${session.token}` } });
+
+function friendlyError(err, base) {
+  if (err instanceof TypeError) return `Could not reach ${base}. Check the server address, or this may be a CORS restriction (see Settings \u2192 Security \u2192 Allowed CORS Origins on the server).`;
+  return err.message || 'Something went wrong.';
+}
+
+const ICON = {
+  headphone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 14a9 9 0 0 1 18 0"/><path d="M21 14v4a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 14v4a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>',
+  dot: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>',
+  ring: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="8"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+};
+
+/* ---------------- LOGIN ---------------- */
+/* Server picker (LAN default / VPN / Public). The pick feeds #absBase, which becomes session.absBase,
+   so every ABS link (Continue now, Start in ABS) uses the address the user signed in with.
+   This device remembers the last pick (localStorage 'ov.server'). */
+(async () => {
+  /* Server list comes from servers.json: the container writes it from the SERVERS setting;
+     on a PC, serve.ps1 serves web\servers.json (never published). No addresses live in this file. */
+  const box = $('srvPick');
+  let list = [];
+  try { const r = await fetch('servers.json', { cache: 'no-store' }); if (r.ok) list = await r.json(); } catch (e) {}
+  list = (Array.isArray(list) ? list : []).filter(s => s && s.url)
+    .map(s => ({ name: String(s.name || s.url), url: String(s.url).trim().replace(/\/+$/, '') }));
+  if (!list.length) { box.innerHTML = '<div class="srv-loading">No servers configured. Set SERVERS in the container settings.</div>'; return; }
+  box.innerHTML = list.map(s => `<label class="srv-opt"><input type="radio" name="srv" value="${esc(s.url)}"><span><b>${esc(s.name)}</b><small>${esc(s.url.replace(/^https?:\/\//, ''))}</small></span></label>`).join('');
+  const radios = [...box.querySelectorAll('input[name="srv"]')];
+  const apply = r => { r.checked = true; $('absBase').value = r.value; };
+  let saved = null; try { saved = localStorage.getItem('ov.server'); } catch (e) {}
+  apply(radios.find(r => r.value === saved) || radios[0]);
+  radios.forEach(r => r.addEventListener('change', () => { if (r.checked) { $('absBase').value = r.value; try { localStorage.setItem('ov.server', r.value); } catch (e) {} } }));
+})();
+
+/* Relay detection. In the Docker build, nginx answers /relay-check and relays /login + /api to ABS
+   (same origin: no CORS, and no public 2FA gate). Then DATA goes through the relay ('' = this origin)
+   while LINKS still use the server picked at sign-in (session.linkBase). serve.ps1 returns 404 = direct mode. */
+let relayState = null;
+async function relayAvailable() {
+  if (relayState === null) {
+    try { const r = await fetch('/relay-check', { cache: 'no-store' }); relayState = r.ok && (await r.text()).trim() === 'outbreak-vault-relay'; }
+    catch (e) { relayState = false; }
+  }
+  return relayState;
+}
+
+$('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const linkBase = $('absBase').value.trim().replace(/\/+$/,'');
+  if (!linkBase) { $('loginErr').textContent = 'No server selected. The server list may not be configured (SERVERS setting).'; return; }
+  const absBase = (await relayAvailable()) ? '' : linkBase;
+  const username = $('loginUser').value.trim();
+  const password = $('loginPass').value;
+  $('loginErr').textContent = '';
+  $('loginSubmit').disabled = true;
+  $('loginSubmit').textContent = 'Authenticating\u2026';
+  try {
+    const res = await fetch(`${absBase}/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username,password}) });
+    if (!res.ok) throw new Error(res.status === 401 ? 'Invalid username or password.' : `Server responded ${res.status}.`);
+    const data = await res.json();
+    const token = data && data.user && data.user.token;
+    if (!token) throw new Error('Login succeeded but no token was returned.');
+
+    const libsRes = await fetch(`${absBase}/api/libraries`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!libsRes.ok) throw new Error(`Could not list libraries (${libsRes.status}).`);
+    const libsData = await libsRes.json();
+    const libs = libsData.libraries || [];
+    const mybooks = libs.find(l => (l.name || '').trim().toLowerCase() === 'mybooks');
+    if (!mybooks) throw new Error('No library named "MyBooks" is visible to this account.');
+
+    session = { token, username, absBase, linkBase, libraryId: mybooks.id };
+    $('sessionPill').textContent = username;
+    $('loginScreen').hidden = true;
+    $('dashboard').hidden = false;
+    loadStats();
+    Promise.resolve(loadProgress()).catch(() => {}).then(renderUpNext);
+    loadGenres();
+  } catch (err) {
+    $('loginErr').textContent = friendlyError(err, absBase || 'the Vault relay (check ABS_URL in the container settings)');
+  } finally {
+    $('loginSubmit').disabled = false;
+    $('loginSubmit').textContent = 'Enter the Vault';
+  }
+});
+
+/* ☰ menu: shows who is signed in and which server (as named on the sign-in picker), plus Sign out.
+   Sign out tells ABS (best effort) and reloads, which drops the in-memory session. */
+(() => {
+  const btn = $('menuBtn'), menu = $('navMenu');
+  const setOpen = open => {
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      const link = session && session.linkBase;
+      const r = [...document.querySelectorAll('#srvPick input[name="srv"]')].find(x => x.value === link);
+      $('nmServer').textContent = r ? r.parentElement.querySelector('b').textContent : (link || '');
+    }
+  };
+  btn.addEventListener('click', e => { e.stopPropagation(); setOpen(menu.hidden); });
+  document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) setOpen(false); });
+  $('signOutBtn').addEventListener('click', async () => {
+    $('signOutBtn').disabled = true;
+    try { if (session) await fetch(`${session.absBase}/logout`, { method: 'POST', headers: { Authorization: `Bearer ${session.token}` } }); } catch (e) { /* offline: still sign out locally */ }
+    location.reload();
+  });
+})();
+
+async function loadStats() {
+  try {
+    const [statsRes, seriesRes] = await Promise.all([
+      fetch(`${session.absBase}/api/libraries/${session.libraryId}/stats`, authHeaders()),
+      fetch(`${session.absBase}/api/libraries/${session.libraryId}/series?limit=1`, authHeaders())
+    ]);
+    if (!statsRes.ok || !seriesRes.ok) throw new Error('stats fetch failed');
+    const stats = await statsRes.json();
+    const seriesData = await seriesRes.json();
+    const hours = Math.round((stats.totalDuration || 0) / 3600).toLocaleString();
+    $('stats').innerHTML = `<b>${(stats.totalItems||0).toLocaleString()}</b> books &middot; <b>${(seriesData.total||0).toLocaleString()}</b> series &middot; <b>${(stats.totalAuthors||0).toLocaleString()}</b> authors &middot; <b>${hours}</b> hours of runtime`;
+  } catch (e) {
+    $('stats').textContent = 'Vault stats unavailable.';
+  }
+}
+
+/* ---------------- UP NEXT (landing page) ----------------
+   Fills #results whenever it's empty (after login, after Clear). ABS personalized shelves (verified live 2026-09-28):
+   continue-listening = Now listening, continue-series = Next in your series, listen-again = Recently finished.
+   Runway line per book = books owned in that series, unread count, hours left. Read-only: no writes here. */
+const seriesCache = {};
+let upNextSeq = 0;
+function normItem(it) {
+  const md = (it.media && it.media.metadata) || {};
+  if (!md.authorName && Array.isArray(md.authors)) md.authorName = md.authors.map(a => a.name).join(', ');
+  if (!md.narratorName && Array.isArray(md.narrators)) md.narratorName = md.narrators.join(', ');
+  const ser = Array.isArray(md.series) ? md.series : (md.series ? [md.series] : []);
+  if (!md.seriesName && ser.length) md.seriesName = ser.map(s => s.sequence ? `${s.name} #${s.sequence}` : s.name).join(', ');
+  it._series = ser[0] || null;
+  return it;
+}
+function seriesBooks(id) {
+  if (!seriesCache[id]) seriesCache[id] = (async () => {
+    const r = await fetch(`${session.absBase}/api/libraries/${session.libraryId}/items?filter=series.${encodeURIComponent(b64u(id))}&limit=200`, authHeaders());
+    return r.ok ? ((await r.json()).results || []) : [];
+  })();
+  return seriesCache[id];
+}
+function leftSecs(it) {
+  const p = progressMap[it.id]; const d = (it.media && it.media.duration) || 0;
+  if (p && p.isFinished) return 0;
+  if (p && p.currentTime) return Math.max(0, d - p.currentTime);
+  return d * (1 - ((p && p.progress) || 0));
+}
+async function runwayData(it) {
+  const s = it._series; if (!s || !s.id) return null;
+  try {
+    const books = await seriesBooks(s.id);
+    if (!books.length) return null;
+    const unread = books.filter(b => !(progressMap[b.id] && progressMap[b.id].isFinished));
+    return { name: s.name, seq: s.sequence, owned: books.length, unread: unread.length, secs: unread.reduce((t, b) => t + leftSecs(b), 0) };
+  } catch (e) { return null; }
+}
+/* ABS links. Web URL uses the server picked at sign-in. On Android, links open the ABS app
+   (intent to com.audiobookshelf.app, scheme audiobookshelf://item/<id>; tested on Greg's phone 2026-09-30)
+   and fall back to the web URL if the app isn't installed. Intent links open in the same tab (no _blank). */
+const isAndroid = /Android/i.test(navigator.userAgent);
+const absWebUrl = id => `${(session.linkBase || session.absBase).replace(/\/+$/, '')}/audiobookshelf/item/${id}`;
+const absWeb = id => isAndroid
+  ? `intent://item/${id}#Intent;scheme=audiobookshelf;package=com.audiobookshelf.app;S.browser_fallback_url=${encodeURIComponent(absWebUrl(id))};end`
+  : absWebUrl(id);
+const absTgt = isAndroid ? '' : ' target="_blank" rel="noopener"';
+const upNextItems = {};
+function unTitle(it) { return esc(((it.media || {}).metadata || {}).title || 'Untitled'); }
+async function renderUpNext() {
+  const box = $('results');
+  if (!session || box.innerHTML.trim()) return;
+  const my = ++upNextSeq;
+  const stillMine = () => my === upNextSeq && box.querySelector('.un-loading');
+  box.innerHTML = `<div class="un-loading">Scanning the vault for your next book&hellip;</div>`;
+  try {
+    const r = await fetch(`${session.absBase}/api/libraries/${session.libraryId}/personalized?limit=10`, authHeaders());
+    if (!r.ok) throw new Error('personalized ' + r.status);
+    const shelves = await r.json();
+    if (!stillMine()) return;
+    const shelf = id => ((shelves.find(s => s.id === id) || {}).entities || []).map(normItem);
+    const now = shelf('continue-listening').slice(0, 5), next = shelf('continue-series').slice(0, 10), done = shelf('listen-again').slice(0, 10);
+    [...now, ...next, ...done].forEach(it => { upNextItems[it.id] = it; });
+
+    const nowCards = await Promise.all(now.map(async it => {
+      const pct = Math.round((((progressMap[it.id] || {}).progress) || 0) * 100);
+      const rw = await runwayData(it);
+      return `<div class="un-card un-now" data-id="${it.id}" data-row="now">${cover(it, 'un-cov')}
+        <div style="min-width:0;flex:1">
+          <div class="un-t">${unTitle(it)}</div>
+          <div class="un-bar"><i style="width:${pct}%"></i></div>
+          <div class="un-s">${pct}% done &middot; ${fmtH(leftSecs(it))} left</div>
+          ${rw ? `<div class="un-runway">${rw.seq ? `Book ${esc(rw.seq)} of ${rw.owned} owned` : `${rw.owned} owned`} &middot; ${rw.unread} unread</div>` : ''}
+          <a class="un-go" href="${absWeb(it.id)}"${absTgt}>&#9654; Continue now</a>
+        </div></div>`;
+    }));
+    const nextCards = await Promise.all(next.map(async it => {
+      const rw = await runwayData(it);
+      const seq = it._series && it._series.sequence ? ` #${esc(it._series.sequence)}` : '';
+      return `<div class="un-card un-tall" data-id="${it.id}" data-row="next">${cover(it, 'un-cov')}
+        <div class="un-t">${unTitle(it)}${seq}</div>
+        ${rw ? `<div class="un-runway">${rw.unread} unread &middot; ${fmtH(rw.secs)} left</div>` : ''}
+        <a class="un-go alt" href="${absWeb(it.id)}"${absTgt}>&#9654; Start in ABS</a></div>`;
+    }));
+    const doneCards = done.map(it => {
+      const md = it.media.metadata;
+      const au = (md.authorName || '').split(',')[0].trim(), nr = (md.narratorName || '').split(',')[0].trim();
+      const g = (md.genres || []).filter(isRealGenre)[0];
+      const chips = [
+        au && `<button type="button" class="link-btn author-link" data-name="${esc(au)}">more by ${esc(au)}</button>`,
+        nr && `<button type="button" class="link-btn narrator-link${isFavNarrator(nr) ? ' fav' : ''}" data-name="${esc(nr)}">read by ${esc(nr)}</button>`,
+        g && `<button type="button" class="g-chip book-genre" data-genre="${esc(g)}" title="more ${esc(g)}">more ${esc(g)}</button>`
+      ].filter(Boolean).join('');
+      return `<div class="un-card un-small" data-id="${it.id}" data-row="done">${cover(it, 'un-cov')}
+        <div class="un-t">${unTitle(it)}</div>${chips ? `<div class="un-chips">${chips}</div>` : ''}</div>`;
+    });
+    if (!stillMine()) return;
+    const sec = (key, title, cards, empty) => `<h2 class="section">${ICON.headphone} ${title}</h2>` +
+      (cards.length ? `<div class="un-row">${cards.join('')}</div><div class="un-detail" id="und-${key}"></div>` : `<div class="un-empty">${empty}</div>`);
+    box.innerHTML = `<div class="upnext">${sec('now', 'Now listening', nowCards, 'Nothing in progress.')}${sec('next', 'Next in your series', nextCards, 'No series to continue right now.')}${sec('done', 'Recently finished', doneCards, 'Nothing finished yet.')}</div>`;
+    if ($('emptyNote')) $('emptyNote').hidden = true;
+  } catch (e) {
+    if (stillMine()) box.innerHTML = '';
+  }
+}
+/* Up Next card click (not on a link/button) = show that book's full row under its shelf; click again to close. */
+function upNextCardClick(e) {
+  const card = e.target.closest('.un-card');
+  if (!card || e.target.closest('a,button')) return false;
+  const panel = $('und-' + card.dataset.row), it = upNextItems[card.dataset.id];
+  if (!panel || !it) return true;
+  const open = card.classList.contains('sel');
+  card.parentElement.querySelectorAll('.un-card.sel').forEach(c => c.classList.remove('sel'));
+  panel.innerHTML = open ? '' : bookRow(it, false, true);
+  if (!open) card.classList.add('sel');
+  return true;
+}
+
+/* ---------------- GENRE FILTERS ----------------
+   Pinned chips + "add a genre" typeahead + Unread-only. Several active genres = AND.
+   Empty search box -> genre BROWSE (all books with the genres). Text in the box -> genres FILTER the search results.
+   Personal markers are never shown as genres. Pins are remembered in this browser (localStorage). */
+const NOT_GENRES = ['mis-gen','read','todo','missing','ignore','buy','lowpri','complete'];
+const DEFAULT_PINS = ['Zombie Apocalypse','Post-Apocalyptic','Dystopian','Military','Sci-Fi','Space Opera','Thriller','Horror'];
+const filt = { genres: [], unread: false };
+let allGenres = [];
+let pinned = (() => { try { const p = JSON.parse(localStorage.getItem('ov.pinnedGenres')); return Array.isArray(p) ? p : DEFAULT_PINS.slice(); } catch (e) { return DEFAULT_PINS.slice(); } })();
+const savePins = () => { try { localStorage.setItem('ov.pinnedGenres', JSON.stringify(pinned)); } catch (e) { /* private mode: pins last this visit */ } };
+const isRealGenre = g => g && !NOT_GENRES.includes(String(g).toLowerCase());
+const sameG = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
+
+async function loadGenres() {
+  try {
+    const res = await fetch(`${session.absBase}/api/libraries/${session.libraryId}/filterdata`, authHeaders());
+    if (!res.ok) return;
+    const fd = await res.json();
+    allGenres = (fd.genres || []).filter(isRealGenre).sort((a,b) => nat(a,b));
+    $('genreList').innerHTML = allGenres.map(g => `<option value="${esc(g)}"></option>`).join('');
+  } catch (e) { /* the bar still works with pinned genres */ }
+  renderGenreBar();
+}
+
+function renderGenreBar() {
+  const shown = [...pinned.filter(g => !allGenres.length || allGenres.some(x => sameG(x, g)))];
+  filt.genres.forEach(g => { if (!shown.some(x => sameG(x, g))) shown.push(g); });   // active but not pinned
+  const chip = g => {
+    const on = filt.genres.some(x => sameG(x, g)), pin = pinned.some(x => sameG(x, g));
+    return `<span class="g-chip${on?' on':''}" data-genre="${esc(g)}" role="button" tabindex="0" aria-pressed="${on}">${esc(g)}<button type="button" class="pin${pin?' pinned':''}" data-pin="${esc(g)}" title="${pin?'Unpin':'Pin to this bar'}" aria-label="${pin?'Unpin':'Pin'} ${esc(g)}">${pin?'\u2605':'\u2606'}</button></span>`;
+  };
+  $('genreBar').innerHTML = shown.map(chip).join('') +
+    `<input class="g-add" id="gAdd" list="genreList" placeholder="add a genre\u2026" aria-label="Add a genre filter">` +
+    `<button type="button" class="g-toggle${filt.unread?' on':''}" id="gUnread" aria-pressed="${filt.unread}">Unread only</button>` +
+    ((filt.genres.length || filt.unread) ? `<button type="button" class="g-clear" id="gClear">clear filters</button>` : '');
+}
+
+/* one check used everywhere books are shown */
+function passes(item) {
+  if (!item || !item.media) return false;
+  const gs = item.media.metadata.genres || [];
+  if (filt.genres.length && !filt.genres.every(g => gs.some(x => sameG(x, g)))) return false;
+  if (filt.unread && progressMap[item.id] && progressMap[item.id].isFinished) return false;
+  return true;
+}
+const filtersOn = () => filt.genres.length > 0 || filt.unread;
+function filterBanner(shown, total) {
+  if (!filtersOn()) return '';
+  const parts = [];
+  if (filt.genres.length) parts.push(filt.genres.join(' + '));
+  if (filt.unread) parts.push('unread only');
+  return `<div class="filter-banner">Showing ${shown} of ${total} books: ${esc(parts.join(', '))}</div>`;
+}
+
+let lastSearch = null;   // { q, data } so filters can re-render search results without a new request
+function applyFilters() {
+  renderGenreBar();
+  const q = $('q').value.trim();
+  const cards = [...document.querySelectorAll('#results .identity')];
+  const browsing = cards.some(c => c.dataset.kind === 'genres');
+  if (filt.genres.length && (!q || browsing)) { browseGenres(); return; }                  // genre browse (re-fetch: first genre may change)
+  if (q && lastSearch && lastSearch.q === q) { renderResults(q, lastSearch.data); return; } // filter the last search in place
+  if (cards.length && !browsing) { cards.forEach(c => renderIdentityMode(c, identityData[c.id].mode || 'single')); return; } // author / narrator view
+  if (q) { runSearch(q); return; }
+  $('results').innerHTML = ''; $('emptyNote').hidden = false; renderUpNext();
+}
+function toggleGenre(g) {
+  const i = filt.genres.findIndex(x => sameG(x, g));
+  if (i >= 0) filt.genres.splice(i, 1); else filt.genres.push(g);
+  applyFilters();
+}
+
+/* Browse: ABS lists every book with the first genre; the other genres + unread are applied on top */
+function browseGenres() {
+  $('emptyNote').hidden = true;
+  const title = filt.genres.join(' + ');
+  $('results').innerHTML = `<h2 class="section">${ICON.book} Genre</h2>` + identityCardHTML('genres', filt.genres[0], title, null, 'series');
+  document.querySelectorAll('.identity').forEach(card => initIdentityCard(card));
+}
+
+async function loadProgress() {
+  try {
+    const res = await fetch(`${session.absBase}/api/me`, authHeaders());
+    if (!res.ok) return;
+    const me = await res.json();
+    progressMap = {};
+    (me.mediaProgress || []).forEach(p => { progressMap[p.libraryItemId] = p; });
+  } catch (e) { /* non-fatal: statuses just show as unread */ }
+}
+
+/* ---------------- CLEAR ---------------- */
+$('clearBtn').addEventListener('click', () => {
+  $('q').value = '';
+  lastSearch = null;
+  $('results').innerHTML = '';
+  $('emptyNote').hidden = false;
+  if (filt.genres.length) browseGenres();   // active genres keep browsing
+  else renderUpNext();                      // otherwise back to the Up Next landing page
+  $('q').focus();
+});
+
+/* ---------------- SEARCH ---------------- */
+function showSpinner(on) { $('overlay').classList.toggle('show', !!on); }
+
+$('searchBtn').addEventListener('click', () => runSearch($('q').value.trim()));
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') runSearch($('q').value.trim()); });
+
+async function runSearch(q) {
+  if (!session) return;
+  if (!q) { if (filt.genres.length) browseGenres(); return; }   // empty box + genres = browse
+  $('q').value = q;
+  $('emptyNote').hidden = true;
+  $('results').innerHTML = '';
+  showSpinner(true);
+  try {
+    const res = await fetch(`${session.absBase}/api/libraries/${session.libraryId}/search?q=${encodeURIComponent(q)}&limit=50`, authHeaders());
+    if (!res.ok) throw new Error(`Search failed (${res.status}).`);
+    const data = await res.json();
+    lastSearch = { q, data };
+    renderResults(q, data);
+  } catch (err) {
+    $('results').innerHTML = `<div class="search-err">${esc(friendlyError(err, session.absBase))}</div>`;
+  } finally {
+    showSpinner(false);
+  }
+}
+
+function renderResults(q, data) {
+  const allBooks = (data.book || []).map(b => b.libraryItem).filter(Boolean);
+  const books = allBooks.filter(passes);
+  const series = (data.series || []).map(s => ({ ...s, books: (s.books || []).filter(passes) })).filter(s => s.books.length);
+  const authors = data.authors || [];
+  const narrators = data.narrators || [];
+
+  if (!books.length && !series.length && !authors.length && !narrators.length) {
+    $('results').innerHTML = filtersOn()
+      ? `<div class="search-err">No matches for "${esc(q)}" with these filters. Remove a genre or turn off Unread only.</div>`
+      : `<div class="search-err">No matches found for "${esc(q)}".</div>`;
+    return;
+  }
+
+  let html = filtersOn() ? filterBanner(books.length, allBooks.length) : '';
+  if (series.length) {
+    html += `<h2 class="section">${ICON.book} Series (${series.length})</h2>` + series.map(s => seriesCard(s, false)).join('');
+  }
+  if (books.length) {
+    html += `<h2 class="section">${ICON.book} Books (${books.length}${allBooks.length===50 && !filtersOn()?'+':''})</h2>` +
+      books.map(b => bookRow(b, false, true)).join('');
+  }
+  if (authors.length) {
+    html += `<h2 class="section">${ICON.headphone} Authors</h2>` + authors.map(a => identityCardHTML('authors', a.id, a.name, a.numBooks)).join('');
+  }
+  if (narrators.length) {
+    html += `<h2 class="section">${ICON.headphone} Narrators</h2>` + narrators.map(n => identityCardHTML('narrators', n.name, n.name, n.numBooks)).join('');
+  }
+  $('results').innerHTML = html;
+
+  // auto-load every identity card immediately
+  document.querySelectorAll('.identity').forEach(card => initIdentityCard(card));
+}
+
+/* ---------------- series completeness (tag-based) ---------------- */
+function seriesStatus(books) {
+  const has = t => books.some(b => (b.media.tags || []).includes(t));
+  if (has('todo')) return { k: 'complete', text: 'Complete', tip: 'A book in this series is tagged "todo".' };
+  if (has('missing')) return { k: 'missing', text: 'Missing books', tip: 'A book in this series is tagged "missing".' };
+  return { k: 'unreviewed', text: 'Unreviewed', tip: 'No completeness tag found on this series yet.' };
+}
+
+function isFavNarrator(name) {
+  if (!name) return false;
+  const low = name.toLowerCase();
+  return FAV_NARRATORS.some(f => low.includes(f));
+}
+
+function cover(item, cls) {
+  const path = item && item.media && item.media.coverPath;
+  if (!path) return `<div class="${cls} ph">${esc((item && item.media && item.media.metadata && item.media.metadata.title || '?').slice(0,1))}</div>`;
+  const src = `${session.absBase}/api/items/${item.id}/cover?width=400&token=${encodeURIComponent(session.token)}`;
+  return `<img class="${cls}" loading="lazy" alt="" src="${src}" onerror="this.outerHTML='<div class=&quot;${cls} ph&quot;>?</div>'">`;
+}
+
+/* Narrator field can hold several names ("A, B"). Each becomes its own shortcut link;
+   favorites keep the amber "shine". */
+function narratorLinks(narrStr) {
+  return narrStr.split(',').map(n => n.trim()).filter(Boolean).map(n =>
+    `<button type="button" class="link-btn narrator-link${isFavNarrator(n)?' fav':''}" data-name="${esc(n)}">${esc(n)}</button>`
+  ).join(', ');
+}
+
+function statusPill(itemId) {
+  const p = progressMap[itemId];
+  if (p && p.isFinished) return `<span class="pill finished">${ICON.check} Finished</span>`;
+  if (p && p.progress > 0) return `<span class="pill progress">${ICON.ring} In progress &middot; ${Math.round(p.progress*100)}%</span>`;
+  return `<span class="pill unread">${ICON.dot} Unread</span>`;
+}
+
+function parseSeriesEntries(seriesNameStr) {
+  if (!seriesNameStr) return [];
+  const out = [];
+  const re = /(?:^|,\s*)([^#]+?)\s+#(\d+(?:\.\d+)?)(?:\s*[-\u2013\u2014]\s*\d+(?:\.\d+)?)?(?=\s*(?:,|$))/g;
+  let m, found = false;
+  while ((m = re.exec(seriesNameStr))) { found = true; out.push({ name: m[1].trim(), seq: parseFloat(m[2]) }); }
+  if (!found) out.push({ name: seriesNameStr.trim(), seq: null });
+  return out;
+}
+function firstSeq(seriesNameStr) {
+  const e = parseSeriesEntries(seriesNameStr)[0];
+  return e ? e.seq : null;
+}
+function firstSeriesName(seriesNameStr) {
+  const e = parseSeriesEntries(seriesNameStr)[0];
+  return e ? e.name : null;
+}
+
+/* genre chips on a book row: real genres only, clickable (toggles that genre filter) */
+function genreChips(genres) {
+  const gs = (genres || []).filter(isRealGenre);
+  if (!gs.length) return '';
+  return `<div class="b-genres">${gs.slice(0, 8).map(g => {
+    const on = filt.genres.some(x => sameG(x, g));
+    return `<button type="button" class="g-chip book-genre${on?' on':''}" data-genre="${esc(g)}" aria-pressed="${on}">${esc(g)}</button>`;
+  }).join('')}</div>`;
+}
+
+/* showSeriesLink: whether to show the "part of series X" subtitle (skip when the book is already
+   being shown inside that series' own expanded card, to avoid a pointless self-link) */
+function bookRow(item, plain, showSeriesLink) {
+  if (!item || !item.media) return '';
+  const md = item.media.metadata || {};
+  const au = md.authorName || '';
+  const narr = md.narratorName || '';
+  const narrCls = isFavNarrator(narr) ? 'narr fav' : 'narr';
+  const hasDesc = !!(md.description && md.description.trim());
+  const seq = firstSeq(md.seriesName);
+  const seriesName = firstSeriesName(md.seriesName);
+  const finished = progressMap[item.id] && progressMap[item.id].isFinished;
+  const btnLabel = finished ? 'Mark Unread' : 'Mark Finished';
+  const authorLink = au ? au.split(',')[0].trim() : '';
+  const coverHtml = plain ? '' : cover(item,'b-cover');
+  return `<div class="book ${plain?'book-plain':''}" data-id="${item.id}">
+    ${coverHtml}
+    <div class="b-body">
+      <div class="b-title">${seq!=null?`<span class="seq">#${esc(seq)}</span>`:''}${esc((md.title||'').replace(/\s*\(Unabridged\)\s*$/,''))}</div>
+      ${(showSeriesLink && seriesName)?`<div class="b-series-sub">in series: <button type="button" class="link-btn series-link" data-name="${esc(seriesName)}">${esc(seriesName)}</button></div>`:''}
+      <div class="b-sub">
+        ${authorLink?`<button type="button" class="link-btn author-link" data-name="${esc(authorLink)}">${esc(au)}</button>`:''}
+        ${narr?`<span class="narr">${ICON.headphone} ${narratorLinks(narr)}</span>`:''}
+        <span>${ICON.clock} ${fmtH(item.media.duration)}</span>
+      </div>
+      ${genreChips(md.genres)}
+      <div class="b-row2">
+        <span class="status-slot">${statusPill(item.id)}</span>
+        <a class="mini-btn abs-link" href="${absWeb(item.id)}"${absTgt}>&#9654; Start in ABS</a>
+        <button class="mini-btn toggle-btn" data-id="${item.id}" data-fin="${finished?1:0}">${btnLabel}</button>
+        ${hasDesc?`<button class="more-link desc-toggle" data-id="${item.id}">more</button>`:''}
+      </div>
+      ${hasDesc?`<div class="desc" id="desc-${item.id}"><div class="desc-txt">${esc(md.description)}</div></div>`:''}
+      <div class="err-note" id="err-${item.id}" hidden></div>
+    </div>
+  </div>`;
+}
+
+function seriesCard(entry, openByDefault) {
+  const s = entry.series;
+  const books = (entry.books || []).slice().sort((a,b) => {
+    const sa = firstSeq(a.media.metadata.seriesName); const sb = firstSeq(b.media.metadata.seriesName);
+    return ((sa==null?1e9:sa) - (sb==null?1e9:sb)) || nat(a.media.metadata.title, b.media.metadata.title);
+  });
+  const st = seriesStatus(books);
+  const totalDur = books.reduce((t,b) => t + (b.media.duration||0), 0);
+  const authors = [...new Set(books.map(b => b.media.metadata.authorName).filter(Boolean))];
+  const authTxt = authors.length > 2 ? authors.slice(0,2).join(', ') + ' & others' : authors.join(' & ');
+  const primaryAuthor = authors[0] ? authors[0].split(',')[0].trim() : '';
+  const cov = books.find(b => b.media.coverPath) || books[0];
+  return `<div class="series ${openByDefault?'open':''}" data-key="${esc(s.id||s.name)}">
+    <div class="s-head">
+      ${cover(cov,'s-cover')}
+      <div class="s-body">
+        <div class="s-title">${esc(s.name)}</div>
+        ${primaryAuthor?`<div class="s-author">by <button type="button" class="link-btn author-link" data-name="${esc(primaryAuthor)}">${esc(authTxt)}</button></div>`:''}
+        <div class="s-meta">
+          <span class="chip">${ICON.book} ${books.length} owned</span>
+          <span class="chip">${ICON.clock} ${fmtH(totalDur)}</span>
+          <span class="chip status-${st.k}" title="${esc(st.tip)}">${st.k==='complete'?ICON.check:st.k==='missing'?ICON.warn:ICON.dot} ${st.text}</span>
+        </div>
+      </div>
+      <div class="s-caret">${ICON.chev}</div>
+    </div>
+    <div class="s-panel"><div class="s-inner">
+      <div class="s-blurb">${esc(s.name)} is by ${esc(authTxt || 'an unlisted author')}. You own ${books.length} book${books.length>1?'s':''} in this series, totaling ${fmtH(totalDur)}.</div>
+      ${books.map(b => bookRow(b, false, false)).join('')}
+    </div></div>
+  </div>`;
+}
+
+/* ---------------- identity cards (authors/narrators) ---------------- */
+function identityCardHTML(kind, key, displayName, numBooks, startMode) {
+  const id = 'id' + (++identitySeq);
+  const mode = startMode || 'single';
+  identityData[id] = { kind, key, items: null, mode };
+  return `<div class="identity" id="${id}" data-kind="${kind}" data-key="${esc(key)}">
+    <div class="identity-head">
+      <div class="identity-name">${esc(displayName)}</div>
+      <div class="identity-count">${numBooks!=null ? numBooks + ' book' + (numBooks===1?'':'s') : ''}</div>
+    </div>
+    <div class="mode-toggle">
+      <button type="button" class="mode-btn${mode==='single'?' active':''}" data-mode="single">Single Books</button>
+      <button type="button" class="mode-btn${mode==='series'?' active':''}" data-mode="series">Series</button>
+    </div>
+    <div class="identity-books"><div class="identity-loading">Pulling records\u2026</div></div>
+  </div>`;
+}
+
+async function initIdentityCard(cardEl) {
+  const id = cardEl.id;
+  const rec = identityData[id];
+  const booksEl = cardEl.querySelector('.identity-books');
+  try {
+    const all = await fetchAllForIdentity(rec.kind, rec.key);
+    rec.items = all;
+    renderIdentityMode(cardEl, rec.mode || 'single');
+  } catch (err) {
+    booksEl.innerHTML = `<div class="err-note">${esc(friendlyError(err, session.absBase))}</div>`;
+  }
+}
+
+async function fetchAllForIdentity(kind, key) {
+  const b64 = b64u(key);
+  let page = 0, total = Infinity, out = [];
+  while (out.length < total) {
+    const url = `${session.absBase}/api/libraries/${session.libraryId}/items?filter=${kind}.${b64}&limit=200&page=${page}`;
+    const res = await fetch(url, authHeaders());
+    if (!res.ok) throw new Error(`Could not load books (${res.status}).`);
+    const data = await res.json();
+    total = data.total || 0;
+    out = out.concat(data.results || []);
+    if (!data.results || data.results.length === 0) break;
+    page += 1;
+  }
+  return out;
+}
+
+function renderIdentityMode(cardEl, mode) {
+  const rec = identityData[cardEl.id];
+  rec.mode = mode;
+  const booksEl = cardEl.querySelector('.identity-books');
+  cardEl.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  if (!rec.items) { booksEl.innerHTML = `<div class="identity-loading">Pulling records\u2026</div>`; return; }
+
+  const items = rec.items.filter(passes);
+  const countEl = cardEl.querySelector('.identity-count');
+  if (filtersOn() || rec.kind === 'genres') countEl.textContent = `${items.length} of ${rec.items.length} book${rec.items.length===1?'':'s'}`;
+  const banner = (filtersOn() && rec.kind !== 'genres') ? filterBanner(items.length, rec.items.length) : '';
+  if (!items.length) { booksEl.innerHTML = banner + `<div class="identity-loading">No books match these filters.</div>`; return; }
+  // genre browsing: unread first, so the next listen is at the top
+  const unreadFirst = (a, b) => rec.kind === 'genres' ? ((progressMap[a.id] && progressMap[a.id].isFinished ? 1 : 0) - (progressMap[b.id] && progressMap[b.id].isFinished ? 1 : 0)) : 0;
+
+  if (mode === 'single') {
+    const sorted = items.slice().sort((a,b) => unreadFirst(a,b) || nat(strip(a.media.metadata.title), strip(b.media.metadata.title)));
+    booksEl.innerHTML = banner + sorted.map(item => bookRow(item, false, true)).join('');
+    return;
+  }
+
+  // Series mode: group by parsed series name
+  const groups = new Map();
+  const standalone = [];
+  items.forEach(item => {
+    const entries = parseSeriesEntries(item.media.metadata.seriesName);
+    if (!item.media.metadata.seriesName) { standalone.push(item); return; }
+    entries.forEach(e => {
+      const key = strip(e.name).toLowerCase();
+      if (!groups.has(key)) groups.set(key, { name: e.name, books: [] });
+      groups.get(key).books.push(item);
+    });
+  });
+  const groupList = [...groups.values()].sort((a,b) => nat(strip(a.name), strip(b.name)));
+  let html = banner + groupList.map(g => seriesCard({ series: { id: g.name, name: g.name }, books: g.books }, false)).join('');
+  if (standalone.length) {
+    html += `<div class="sub-heading">Standalone</div>` +
+      standalone.sort((a,b)=>nat(strip(a.media.metadata.title), strip(b.media.metadata.title))).map(item => bookRow(item, true, false)).join('');
+  }
+  booksEl.innerHTML = html || `<div class="identity-loading">No books found.</div>`;
+}
+
+/* ---------------- jump-to navigation ---------------- */
+async function jumpToSeries(name) {
+  $('q').value = name;
+  $('emptyNote').hidden = true;
+  $('results').innerHTML = '';
+  showSpinner(true);
+  try {
+    const res = await fetch(`${session.absBase}/api/libraries/${session.libraryId}/search?q=${encodeURIComponent(name)}&limit=8`, authHeaders());
+    if (!res.ok) throw new Error(`Search failed (${res.status}).`);
+    const data = await res.json();
+    const list = data.series || [];
+    const lowName = name.toLowerCase();
+    const best = list.find(s => s.series.name.toLowerCase() === lowName) || list[0];
+    if (!best) { $('results').innerHTML = `<div class="search-err">Couldn't find a series called "${esc(name)}".</div>`; return; }
+    $('results').innerHTML = seriesCard(best, true);
+  } catch (err) {
+    $('results').innerHTML = `<div class="search-err">${esc(friendlyError(err, session.absBase))}</div>`;
+  } finally {
+    showSpinner(false);
+  }
+}
+
+async function jumpToAuthor(name) {
+  $('q').value = name;
+  $('emptyNote').hidden = true;
+  $('results').innerHTML = '';
+  showSpinner(true);
+  try {
+    const res = await fetch(`${session.absBase}/api/libraries/${session.libraryId}/search?q=${encodeURIComponent(name)}&limit=8`, authHeaders());
+    if (!res.ok) throw new Error(`Search failed (${res.status}).`);
+    const data = await res.json();
+    const list = data.authors || [];
+    const lowName = name.toLowerCase();
+    const best = list.find(a => a.name.toLowerCase() === lowName) || list[0];
+    if (!best) { $('results').innerHTML = `<div class="search-err">Couldn't find an author called "${esc(name)}".</div>`; return; }
+    $('results').innerHTML = identityCardHTML('authors', best.id, best.name, best.numBooks);
+    document.querySelectorAll('.identity').forEach(card => initIdentityCard(card));
+  } catch (err) {
+    $('results').innerHTML = `<div class="search-err">${esc(friendlyError(err, session.absBase))}</div>`;
+  } finally {
+    showSpinner(false);
+  }
+}
+
+/* Narrators have no ID in ABS: the name string IS the filter key. Search is only used to get
+   the book count for the header; if it doesn't return an exact match we still load by name. */
+async function jumpToNarrator(name) {
+  $('q').value = name;
+  $('emptyNote').hidden = true;
+  $('results').innerHTML = '';
+  showSpinner(true);
+  try {
+    let numBooks = null, displayName = name;
+    const res = await fetch(`${session.absBase}/api/libraries/${session.libraryId}/search?q=${encodeURIComponent(name)}&limit=8`, authHeaders());
+    if (res.ok) {
+      const data = await res.json();
+      const hit = (data.narrators || []).find(n => (n.name || '').toLowerCase() === name.toLowerCase());
+      if (hit) { numBooks = hit.numBooks; displayName = hit.name; }
+    }
+    $('results').innerHTML = `<h2 class="section">${ICON.headphone} Narrator</h2>` + identityCardHTML('narrators', displayName, displayName, numBooks);
+    document.querySelectorAll('.identity').forEach(card => initIdentityCard(card));
+  } catch (err) {
+    $('results').innerHTML = `<div class="search-err">${esc(friendlyError(err, session.absBase))}</div>`;
+  } finally {
+    showSpinner(false);
+  }
+}
+
+/* ---------------- read status update ---------------- */
+async function handleToggle(btn) {
+  const id = btn.dataset.id;
+  const wantFinished = btn.dataset.fin !== '1';
+  const errEl = $('err-' + id);
+  if (errEl) errEl.hidden = true;
+  btn.disabled = true;
+  const prevLabel = btn.textContent;
+  btn.textContent = '\u2026';
+  try {
+    const res = await fetch(`${session.absBase}/api/me/progress/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
+      body: JSON.stringify({ isFinished: wantFinished })
+    });
+    if (!res.ok) throw new Error(`Server responded ${res.status}.`);
+    progressMap[id] = { ...(progressMap[id]||{}), isFinished: wantFinished, progress: wantFinished ? 1 : 0 };
+    document.querySelectorAll(`.book[data-id="${id}"]`).forEach(row => {
+      row.querySelector('.status-slot').innerHTML = statusPill(id);
+    });
+    btn.dataset.fin = wantFinished ? '1' : '0';
+    btn.textContent = wantFinished ? 'Mark Unread' : 'Mark Finished';
+    btn.disabled = false;
+  } catch (err) {
+    btn.textContent = prevLabel;
+    btn.disabled = false;
+    if (errEl) { errEl.textContent = friendlyError(err, session.absBase); errEl.hidden = false; }
+  }
+}
+
+/* ---------------- one delegated click handler for all dynamic content ---------------- */
+$('results').addEventListener('click', (e) => {
+  if (upNextCardClick(e)) return;
+  const gBtn = e.target.closest('.book-genre');
+  if (gBtn) { toggleGenre(gBtn.dataset.genre); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+
+  const modeBtn = e.target.closest('.mode-btn');
+  if (modeBtn) { renderIdentityMode(modeBtn.closest('.identity'), modeBtn.dataset.mode); return; }
+
+  const authorLink = e.target.closest('.author-link');
+  if (authorLink) { jumpToAuthor(authorLink.dataset.name); return; }
+
+  const narratorLink = e.target.closest('.narrator-link');
+  if (narratorLink) { jumpToNarrator(narratorLink.dataset.name); return; }
+
+  const seriesLink = e.target.closest('.series-link');
+  if (seriesLink) { jumpToSeries(seriesLink.dataset.name); return; }
+
+  const descBtn = e.target.closest('.desc-toggle');
+  if (descBtn) {
+    const d = $('desc-' + descBtn.dataset.id);
+    d.classList.toggle('open');
+    descBtn.textContent = d.classList.contains('open') ? 'less' : 'more';
+    return;
+  }
+
+  const toggleBtn = e.target.closest('.toggle-btn');
+  if (toggleBtn) { handleToggle(toggleBtn); return; }
+
+  const head = e.target.closest('.s-head');
+  if (head) { head.closest('.series').classList.toggle('open'); return; }
+});
+
+/* ---------------- genre bar ---------------- */
+$('genreBar').addEventListener('click', (e) => {
+  const pinBtn = e.target.closest('.pin');
+  if (pinBtn) {
+    const g = pinBtn.dataset.pin, i = pinned.findIndex(x => sameG(x, g));
+    if (i >= 0) pinned.splice(i, 1); else pinned.push(g);
+    savePins(); renderGenreBar(); return;
+  }
+  const chip = e.target.closest('.g-chip');
+  if (chip) { toggleGenre(chip.dataset.genre); return; }
+  if (e.target.closest('#gUnread')) { filt.unread = !filt.unread; applyFilters(); return; }
+  if (e.target.closest('#gClear')) { filt.genres = []; filt.unread = false; applyFilters(); return; }
+});
+$('genreBar').addEventListener('keydown', (e) => {
+  const chip = e.target.closest('.g-chip');
+  if (chip && e.target === chip && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleGenre(chip.dataset.genre); }
+});
+/* "add a genre": picking from the suggestions (or typing an exact genre + Enter) switches it on */
+$('genreBar').addEventListener('change', (e) => {
+  if (e.target.id !== 'gAdd') return;
+  const v = e.target.value.trim(); if (!v) return;
+  const g = allGenres.find(x => sameG(x, v));
+  if (!g) { e.target.value = ''; e.target.placeholder = 'no genre by that name'; return; }
+  if (!filt.genres.some(x => sameG(x, g))) filt.genres.push(g);
+  applyFilters();
+});
+</script>
+</body>
+</html>

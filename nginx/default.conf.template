@@ -1,0 +1,35 @@
+# Rendered at container start: ${ABS_URL} and ${PORT} come from the container environment.
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    client_max_body_size 1m;
+    server_tokens off;
+
+    # Allow-list: only these files are served. Everything else is 404.
+    location = /                         { return 302 /The_Outbreak_Vault.html; }
+    location = /The_Outbreak_Vault.html  { add_header Cache-Control "no-cache"; }
+    location = /outbreak_vault_icon.svg  { }
+    location = /icon.png                 { }
+    location = /servers.json             { add_header Cache-Control "no-cache"; }   # written at start from SERVERS
+
+    # The dashboard asks this to learn it is behind the relay (serve.ps1 on a PC returns 404).
+    location = /relay-check {
+        default_type text/plain;
+        return 200 'outbreak-vault-relay';
+    }
+
+    # Relay to Audiobookshelf: same origin for the browser (no CORS), and it reaches ABS on the
+    # LAN or Tailscale, behind any public 2FA gate.
+    location ~ ^/(login|logout|api/) {
+        proxy_pass ${ABS_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header Origin "";
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    location / { return 404; }
+}

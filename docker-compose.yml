@@ -1,0 +1,14 @@
+# The Outbreak Vault: generic Linux install.   docker compose up -d
+services:
+  outbreak-vault:
+    image: ghcr.io/sarge9199/outbreak-vault:latest
+    container_name: outbreak-vault
+    restart: unless-stopped
+    ports:
+      - "8642:8642"
+    environment:
+      # REQUIRED: where the container reaches Audiobookshelf (LAN or VPN address).
+      ABS_URL: "http://192.168.1.50:13378"
+      # OPTIONAL: sign-in choices shown to users, "Name|URL;Name|URL".
+      # Each user's "Start in ABS" links open the address they pick here.
+      SERVERS: "Home network|http://192.168.1.50:13378;VPN|http://100.64.0.10:13378"

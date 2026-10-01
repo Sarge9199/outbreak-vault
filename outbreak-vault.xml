@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>outbreak-vault</Name>
+  <Repository>ghcr.io/sarge9199/outbreak-vault:latest</Repository>
+  <Registry>https://github.com/Sarge9199/outbreak-vault/pkgs/container/outbreak-vault</Registry>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/Sarge9199/outbreak-vault/issues</Support>
+  <Project>https://github.com/Sarge9199/outbreak-vault</Project>
+  <Overview>The Outbreak Vault: an Audiobookshelf companion dashboard (Up Next shelves, series runway, genre browsing, one-tap "Start in ABS"). The container serves the page and relays API calls to your Audiobookshelf server, so no CORS setup is needed. Users sign in with their own Audiobookshelf accounts; the container stores no credentials.</Overview>
+  <Category>MediaApp:Books</Category>
+  <WebUI>http://[IP]:[PORT:8642]/</WebUI>
+  <Icon>https://raw.githubusercontent.com/Sarge9199/outbreak-vault/main/icon.png</Icon>
+  <ExtraParams>--restart unless-stopped</ExtraParams>
+  <Config Name="Web UI port" Target="8642" Default="8642" Mode="tcp" Description="Port the dashboard is served on." Type="Port" Display="always" Required="true" Mask="false">8642</Config>
+  <Config Name="ABS_URL" Target="ABS_URL" Default="" Mode="" Description="REQUIRED. Where this container reaches Audiobookshelf, e.g. http://192.168.1.50:13378 (LAN) or a Tailscale address." Type="Variable" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="SERVERS" Target="SERVERS" Default="" Mode="" Description="Optional sign-in choices: Name|URL;Name|URL  e.g.  Home network|http://192.168.1.50:13378;VPN|http://100.64.0.10:13378  - 'Start in ABS' links open the address the user picks. Empty = one choice built from ABS_URL." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+</Container>

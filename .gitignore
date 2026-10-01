@@ -1,0 +1,12 @@
+# Safety net: never publish credentials, local server lists, working notes, or scripts.
+.abs_token
+*token*
+servers.json
+HANDOFF.md
+tools/
+*.ps1
+*.log
+*.bak*
+.env
+*.env
+dist/
